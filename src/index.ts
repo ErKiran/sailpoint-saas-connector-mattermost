@@ -11,7 +11,7 @@ import {
     StdAccountListInput,
     StdTestConnectionInput
 } from '@sailpoint/connector-sdk'
-import { MyClient } from './my-client'
+import { MattermostClient } from './mattermost'
 
 // Connector must be exported as module property named connector
 export const connector = async () => {
@@ -20,7 +20,7 @@ export const connector = async () => {
     const config = await readConfig()
 
     // Use the vendor SDK, or implement own client as necessary, to initialize a client
-    const myClient = new MyClient(config)
+    const myClient = new MattermostClient(config)
 
     return createConnector()
         .stdTestConnection(async (context: Context, input: StdTestConnectionInput, res: Response<StdTestConnectionOutput>) => {
