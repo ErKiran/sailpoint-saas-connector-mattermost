@@ -2,7 +2,6 @@
 	"name": "mattermost-saas",
 	"commands": [
 		"std:account:list",
-		"std:account:read",
 		"std:test-connection"
 	],
 	"sourceConfig": [
@@ -18,6 +17,11 @@
 						{
 							"key": "token",
 							"label": "Token",
+							"type": "secret"
+						},
+						{
+							"key": "baseUrl",
+							"label": "Base URL",
 							"type": "text"
 						}
 					]
@@ -25,10 +29,10 @@
 			]
 		}
 	],
-	"accountSchema":{
+	"accountSchema": {
 		"displayAttribute": "firstName",
 		"identityAttribute": "email",
-		"attributes":[
+		"attributes": [
 			{
 				"name": "firstName",
 				"type": "string",
@@ -43,6 +47,51 @@
 				"name": "email",
 				"type": "string",
 				"description": "Email of the account"
+			},
+			{
+				"name": "createdAt",
+				"type": "string",
+				"description": "Account creation timestamp"
+			},
+			{
+				"name": "updatedAt",
+				"type": "string",
+				"description": "Account last updated timestamp"
+			},
+			{
+				"name": "userName",
+				"type": "string",
+				"description": "Username of the account"
+			},
+			{
+				"name": "position",
+				"type": "string",
+				"description": "Position or job title of the account"
+			},
+			{
+				"name": "nickname",
+				"type": "string",
+				"description": "Nickname of the account"
+			},
+			{
+				"name": "emailVerified",
+				"type": "boolean",
+				"description": "Indicates whether the account email is verified"
+			},
+			{
+				"name": "roles",
+				"type": "string",
+				"description": "Roles assigned to the account"
+			},
+			{
+				"name": "locale",
+				"type": "string",
+				"description": "Locale configured for the account"
+			},
+			{
+				"name": "timeZone",
+				"type": "string",
+				"description": "Timezone configured for the account"
 			}
 		]
 	},
