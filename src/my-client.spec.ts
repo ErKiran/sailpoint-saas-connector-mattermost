@@ -1,5 +1,5 @@
 import { ConnectorError, StandardCommand } from '@sailpoint/connector-sdk'
-import { MyClient } from './my-client'
+import { MattermostClient } from './mattermost'
 
 const mockConfig: any = {
     token: 'xxx123'
@@ -7,16 +7,11 @@ const mockConfig: any = {
 
 describe('connector client unit tests', () => {
 
-    const myClient = new MyClient(mockConfig)
+    const myClient = new MattermostClient(mockConfig)
 
     it('connector client list accounts', async () => {
         let allAccounts = await myClient.getAllAccounts()
         expect(allAccounts.length).toStrictEqual(2)
-    })
-
-    it('connector client get account', async () => {
-        let account = await myClient.getAccount('john.doe')
-        expect(account.username).toStrictEqual('john.doe')
     })
 
     it('connector client test connection', async () => {
@@ -29,7 +24,7 @@ describe('connector client unit tests', () => {
 
     it('invalid connector client', async () => {
         try {
-            new MyClient({})
+            new MattermostClient({})
         } catch (e) {
             expect(e instanceof ConnectorError).toBeTruthy()
         }

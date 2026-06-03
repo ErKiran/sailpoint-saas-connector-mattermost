@@ -5,8 +5,6 @@ import {
     Response,
     logger,
     StdAccountListOutput,
-    StdAccountReadInput,
-    StdAccountReadOutput,
     StdTestConnectionOutput,
     StdAccountListInput,
     StdTestConnectionInput
@@ -20,15 +18,15 @@ export const connector = async () => {
     const config = await readConfig()
 
     // Use the vendor SDK, or implement own client as necessary, to initialize a client
-    const myClient = new MattermostClient(config)
+    const mattermost = new MattermostClient(config)
 
     return createConnector()
         .stdTestConnection(async (context: Context, input: StdTestConnectionInput, res: Response<StdTestConnectionOutput>) => {
             logger.info("Running test connection")
-            res.send(await myClient.testConnection())
+            res.send(await mattermost.testConnection())
         })
         .stdAccountList(async (context: Context, input: StdAccountListInput, res: Response<StdAccountListOutput>) => {
-            const accounts = await myClient.getAllAccounts()
+            const accounts = await mattermost.getAllAccounts()
 
             for (const account of accounts) {
                 res.send({
@@ -37,25 +35,19 @@ export const connector = async () => {
                     attributes: {
                         firstName: account.firstName,
                         lastName: account.lastName,
+                        createdAt: account.createAt,
+                        updatedAt: account.updateAt,
+                        userName: account.username,
+                        position: account.position,
                         email: account.email,
+                        nickname: account.nickname,
+                        emailVerified: account.emailVerified,
+                        roles: account.roles,
+                        locale: account.locale,
+                        timeZone: account.timezone?.automaticTimezone || null
                     },
                 })
             }
             logger.info(`stdAccountList sent ${accounts.length} accounts`)
-        })
-        .stdAccountRead(async (context: Context, input: StdAccountReadInput, res: Response<StdAccountReadOutput>) => {
-            const account = await myClient.getAccount(input.identity)
-
-            res.send({
-                identity: account.username,
-                uuid: account.id,
-                attributes: {
-                    firstName: account.firstName,
-                    lastName: account.lastName,
-                    email: account.email,
-                },
-            })
-            logger.info(`stdAccountRead read account : ${input.identity}`)
-
         })
 }
