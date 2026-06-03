@@ -2,7 +2,7 @@ import { ConnectorError } from "@sailpoint/connector-sdk"
 import { mapMattermostUserResponse, MattermostUser } from "./interface"
 
 const PING_PATH = "/api/v4/system/ping"
-const LIST_USERS = "/api/v4/users"
+const LIST_USERS = "/api/v4/users
 
 export class MattermostClient {
     private readonly token?: string
