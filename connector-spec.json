@@ -1,99 +1,273 @@
 {
-	"name": "mattermost-saas",
-	"commands": [
-		"std:account:list",
-		"std:test-connection"
-	],
-	"sourceConfig": [
-		{
-			"type": "menu",
-			"label": "Configuration",
-			"items": [
-				{
-					"type": "section",
-					"sectionTitle": "Authentication",
-					"sectionHelpMessage": "Provide connection parameters to interact securely with the target application.",
-					"items": [
-						{
-							"key": "token",
-							"label": "Token",
-							"type": "secret"
-						},
-						{
-							"key": "baseUrl",
-							"label": "Base URL",
-							"type": "text"
-						}
-					]
-				}
-			]
-		}
-	],
-	"accountSchema": {
-		"displayAttribute": "firstName",
-		"identityAttribute": "email",
-		"attributes": [
-			{
-				"name": "firstName",
-				"type": "string",
-				"description": "First name of the account"
-			},
-			{
-				"name": "lastName",
-				"type": "string",
-				"description": "Last name of the account"
-			},
-			{
-				"name": "email",
-				"type": "string",
-				"description": "Email of the account"
-			},
-			{
-				"name": "createdAt",
-				"type": "string",
-				"description": "Account creation timestamp"
-			},
-			{
-				"name": "updatedAt",
-				"type": "string",
-				"description": "Account last updated timestamp"
-			},
-			{
-				"name": "userName",
-				"type": "string",
-				"description": "Username of the account"
-			},
-			{
-				"name": "position",
-				"type": "string",
-				"description": "Position or job title of the account"
-			},
-			{
-				"name": "nickname",
-				"type": "string",
-				"description": "Nickname of the account"
-			},
-			{
-				"name": "emailVerified",
-				"type": "boolean",
-				"description": "Indicates whether the account email is verified"
-			},
-			{
-				"name": "roles",
-				"type": "string",
-				"description": "Roles assigned to the account"
-			},
-			{
-				"name": "locale",
-				"type": "string",
-				"description": "Locale configured for the account"
-			},
-			{
-				"name": "timeZone",
-				"type": "string",
-				"description": "Timezone configured for the account"
-			}
-		]
-	},
-	"entitlementSchemas": []
+    "name": "mattermost-saas",
+    "commands": [
+        "std:account:list",
+        "std:account:read",
+        "std:account:create",
+        "std:account:update",
+        "std:account:delete",
+        "std:account:disable",
+        "std:account:enable",
+        "std:entitlement:list",
+        "std:test-connection"
+    ],
+    "sourceConfig": [
+        {
+            "type": "menu",
+            "label": "Configuration",
+            "items": [
+                {
+                    "type": "section",
+                    "sectionTitle": "Authentication",
+                    "sectionHelpMessage": "Provide connection parameters to interact securely with the target application.",
+                    "items": [
+                        {
+                            "key": "token",
+                            "label": "Token",
+                            "type": "secret"
+                        },
+                        {
+                            "key": "baseUrl",
+                            "label": "Base URL",
+                            "type": "text"
+                        }
+                    ]
+                },
+                {
+                    "type": "section",
+                    "sectionTitle": "User Filters",
+                    "sectionHelpMessage": "Limit account aggregation with Mattermost user API filters. Leave fields blank to include all visible users.",
+                    "items": [
+                        {
+                            "key": "userActive",
+                            "label": "Active users only",
+                            "type": "checkbox"
+                        },
+                        {
+                            "key": "userInactive",
+                            "label": "Inactive users only",
+                            "type": "checkbox"
+                        },
+                        {
+                            "key": "userInTeam",
+                            "label": "Users in team ID",
+                            "type": "text"
+                        },
+                        {
+                            "key": "userNotInTeam",
+                            "label": "Users not in team ID",
+                            "type": "text"
+                        },
+                        {
+                            "key": "userInChannel",
+                            "label": "Users in channel ID",
+                            "type": "text"
+                        },
+                        {
+                            "key": "userNotInChannel",
+                            "label": "Users not in channel ID",
+                            "type": "text"
+                        },
+                        {
+                            "key": "userWithoutTeam",
+                            "label": "Users without a team",
+                            "type": "checkbox"
+                        },
+                        {
+                            "key": "userRole",
+                            "label": "Single system role",
+                            "type": "text"
+                        },
+                        {
+                            "key": "userRoles",
+                            "label": "System roles",
+                            "type": "text"
+                        },
+                        {
+                            "key": "userTeamRoles",
+                            "label": "Team roles",
+                            "type": "text"
+                        },
+                        {
+                            "key": "userChannelRoles",
+                            "label": "Channel roles",
+                            "type": "text"
+                        },
+                        {
+                            "key": "userSort",
+                            "label": "User sort",
+                            "type": "text"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "accountSchema": {
+        "displayAttribute": "firstName",
+        "identityAttribute": "email",
+        "groupAttribute": "channels",
+        "attributes": [
+            {
+                "name": "id",
+                "type": "string",
+                "description": "Mattermost user ID"
+            },
+            {
+                "name": "firstName",
+                "type": "string",
+                "description": "First name of the account"
+            },
+            {
+                "name": "lastName",
+                "type": "string",
+                "description": "Last name of the account"
+            },
+            {
+                "name": "email",
+                "type": "string",
+                "description": "Email of the account"
+            },
+            {
+                "name": "createdAt",
+                "type": "string",
+                "description": "Account creation timestamp"
+            },
+            {
+                "name": "updatedAt",
+                "type": "string",
+                "description": "Account last updated timestamp"
+            },
+            {
+                "name": "userName",
+                "type": "string",
+                "description": "Username of the account"
+            },
+            {
+                "name": "position",
+                "type": "string",
+                "description": "Position or job title of the account"
+            },
+            {
+                "name": "nickname",
+                "type": "string",
+                "description": "Nickname of the account"
+            },
+            {
+                "name": "emailVerified",
+                "type": "boolean",
+                "description": "Indicates whether the account email is verified"
+            },
+            {
+                "name": "authService",
+                "type": "string",
+                "description": "Mattermost authentication service"
+            },
+            {
+                "name": "roles",
+                "type": "string",
+                "description": "Roles assigned to the account"
+            },
+            {
+                "name": "locale",
+                "type": "string",
+                "description": "Locale configured for the account"
+            },
+            {
+                "name": "timeZone",
+                "type": "string",
+                "description": "Timezone configured for the account"
+            },
+            {
+                "name": "channels",
+                "type": "string",
+                "description": "Mattermost channel memberships assigned to the account",
+                "multi": true,
+                "entitlement": true,
+                "managed": true,
+                "schemaObjectType": "channel"
+            }
+        ]
+    },
+    "entitlementSchemas": [
+        {
+            "type": "channel",
+            "displayAttribute": "displayName",
+            "identityAttribute": "id",
+            "attributes": [
+                {
+                    "name": "id",
+                    "type": "string",
+                    "description": "Mattermost channel ID"
+                },
+                {
+                    "name": "name",
+                    "type": "string",
+                    "description": "Mattermost channel name"
+                },
+                {
+                    "name": "displayName",
+                    "type": "string",
+                    "description": "Mattermost channel display name"
+                },
+                {
+                    "name": "type",
+                    "type": "string",
+                    "description": "Mattermost channel type"
+                },
+                {
+                    "name": "teamId",
+                    "type": "string",
+                    "description": "Mattermost team ID that owns the channel"
+                },
+                {
+                    "name": "teamName",
+                    "type": "string",
+                    "description": "Mattermost team name that owns the channel"
+                },
+                {
+                    "name": "teamDisplayName",
+                    "type": "string",
+                    "description": "Mattermost team display name that owns the channel"
+                },
+                {
+                    "name": "purpose",
+                    "type": "string",
+                    "description": "Mattermost channel purpose"
+                },
+                {
+                    "name": "header",
+                    "type": "string",
+                    "description": "Mattermost channel header"
+                },
+                {
+                    "name": "createdAt",
+                    "type": "string",
+                    "description": "Channel creation timestamp"
+                },
+                {
+                    "name": "updatedAt",
+                    "type": "string",
+                    "description": "Channel last updated timestamp"
+                },
+                {
+                    "name": "deletedAt",
+                    "type": "string",
+                    "description": "Channel deletion timestamp, if deleted"
+                },
+                {
+                    "name": "memberIds",
+                    "type": "string",
+                    "description": "Mattermost user IDs that are members of the channel",
+                    "multi": true
+                },
+                {
+                    "name": "adminIds",
+                    "type": "string",
+                    "description": "Mattermost user IDs with channel admin rights",
+                    "multi": true
+                }
+            ]
+        }
+    ]
 }

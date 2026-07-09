@@ -1,59 +1,55 @@
-import { ConnectorError } from "@sailpoint/connector-sdk"
-import { mapMattermostUserResponse, MattermostUser } from "./interface"
+import { StdAccountCreateInput, StdAccountUpdateInput } from '@sailpoint/connector-sdk'
+import { MattermostChannelService } from './mattermost/channels/service'
+import { MattermostChannelEntitlement } from './mattermost/channels/types'
+import { MattermostHttpClient } from './mattermost/common/http-client'
+import { MattermostConfig } from './mattermost/common/types'
+import { buildUserFilter } from './mattermost/users/filters'
+import { MattermostUserService } from './mattermost/users/service'
+import { MattermostUser } from './mattermost/users/types'
 
-const PING_PATH = "/api/v4/system/ping"
-const LIST_USERS = "/api/v4/users
+const PING_PATH = '/api/v4/system/ping'
 
 export class MattermostClient {
-    private readonly token?: string
-    private readonly baseUrl?: string
+    private readonly http: MattermostHttpClient
+    private readonly channels: MattermostChannelService
+    private readonly users: MattermostUserService
 
-    constructor(config: any) {
-        this.baseUrl = config?.baseUrl
-        this.token = config?.token
-
-        if (!this.token) {
-            throw new ConnectorError('token must be provided from config')
-        }
-
-        if(!this.baseUrl){
-              throw new ConnectorError('baseUrl must be provided from config')
-        }
-
+    constructor(config: MattermostConfig) {
+        this.http = new MattermostHttpClient(config)
+        this.channels = new MattermostChannelService(this.http)
+        this.users = new MattermostUserService(this.http, this.channels, { ...buildUserFilter(config) })
     }
 
-    async request(path:string): Promise<any>{
-        const url = `${this.baseUrl}${path}`
-
-        const response = await fetch(url, {
-            method: "GET",
-            headers:{
-                Accept: "application/json",
-                Authorization: `Bearer ${this.token}`
-            }
-
-        })
-
-        return response.json()
+    async testConnection(): Promise<{}> {
+        await this.http.request(PING_PATH)
+        return {}
     }
 
     async getAllAccounts(): Promise<MattermostUser[]> {
-        const accounts: MattermostUser[] = []
-        const users = await this.request(LIST_USERS)
-
-        if(!Array.isArray(users)){
-            throw new ConnectorError("Users list isn't a array ")
-        }
-
-        for(const user of users){
-            accounts.push({...mapMattermostUserResponse(user)})
-        }
-
-        return accounts
+        return this.users.getAllAccounts()
     }
 
-    async testConnection(): Promise<any> {
-        const ping = await this.request(PING_PATH)
-        return ping
+    async getAccount(userId: string): Promise<MattermostUser> {
+        return this.users.getAccount(userId)
+    }
+
+    async createAccount(input: StdAccountCreateInput): Promise<MattermostUser> {
+        return this.users.createAccount(input)
+    }
+
+    async updateAccount(input: StdAccountUpdateInput): Promise<MattermostUser> {
+        return this.users.updateAccount(input)
+    }
+
+    async deleteAccount(userId: string): Promise<{}> {
+        return this.users.deleteAccount(userId)
+    }
+
+    async setAccountActive(userId: string, active: boolean): Promise<MattermostUser> {
+        return this.users.setAccountActive(userId, active)
+    }
+
+    async getAllChannelEntitlements(): Promise<MattermostChannelEntitlement[]> {
+        return this.channels.getAllChannelEntitlements()
     }
 }
