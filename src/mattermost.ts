@@ -1,6 +1,6 @@
 import { StdAccountCreateInput, StdAccountUpdateInput } from '@sailpoint/connector-sdk'
 import { MattermostChannelService } from './mattermost/channels/service'
-import { MattermostChannelEntitlement } from './mattermost/channels/types'
+import { MattermostChannelEntitlement, MattermostEntitlement } from './mattermost/channels/types'
 import { MattermostHttpClient } from './mattermost/common/http-client'
 import { MattermostConfig } from './mattermost/common/types'
 import { buildUserFilter } from './mattermost/users/filters'
@@ -49,7 +49,23 @@ export class MattermostClient {
         return this.users.setAccountActive(userId, active)
     }
 
+    async unlockAccount(userId: string): Promise<MattermostUser> {
+        return this.users.setAccountActive(userId, true)
+    }
+
     async getAllChannelEntitlements(): Promise<MattermostChannelEntitlement[]> {
         return this.channels.getAllChannelEntitlements()
+    }
+
+    async getChannelEntitlement(channelId: string): Promise<MattermostChannelEntitlement> {
+        return this.channels.getChannelEntitlement(channelId)
+    }
+
+    async getAllEntitlements(): Promise<MattermostEntitlement[]> {
+        return this.channels.getAllEntitlements()
+    }
+
+    async getEntitlement(type: string, entitlementId: string): Promise<MattermostEntitlement> {
+        return this.channels.getEntitlement(type, entitlementId)
     }
 }

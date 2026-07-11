@@ -27,7 +27,9 @@ export interface MattermostAccountAttributes {
     authData?: string
     authService?: string
     roles?: string
+    teams?: string[]
     channels?: string[]
+    entitlements?: string[]
 }
 
 export interface MattermostCreateUserRequest {
@@ -105,7 +107,10 @@ export interface MattermostUser {
     timezone?: Partial<MattermostTimezone>
     termsOfServiceId?: string
     termsOfServiceCreateAt?: number
+    teams?: string[]
     channels?: string[]
+    roleEntitlements?: string[]
+    entitlements?: string[]
 }
 
 export interface MattermostNotifyPropsResponse {

@@ -19,9 +19,12 @@ export function toStdAccountOutput(account: MattermostUser): StdAccountListOutpu
             emailVerified: account.emailVerified,
             authService: account.authService,
             roles: account.roles,
+            roleEntitlements: account.roleEntitlements ?? [],
             locale: account.locale,
             timeZone: account.timezone?.automaticTimezone || null,
+            teams: account.teams ?? [],
             channels: account.channels ?? [],
+            entitlements: account.entitlements ?? [],
         },
     }
 }

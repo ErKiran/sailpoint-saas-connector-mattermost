@@ -45,6 +45,16 @@ const teamResponse = {
     allow_open_invite: true,
 }
 
+const teamMemberResponse = {
+    team_id: 'team-1',
+    user_id: 'user-1',
+    roles: 'team_user team_admin',
+    delete_at: 0,
+    scheme_guest: false,
+    scheme_user: true,
+    scheme_admin: true,
+}
+
 const publicChannelResponse = {
     id: 'channel-1',
     create_at: 10,
@@ -124,12 +134,32 @@ function mockFetchWithMattermostResponses() {
             return jsonResponse([teamResponse])
         }
 
+        if (path === '/api/v4/teams/team-1') {
+            return jsonResponse(teamResponse)
+        }
+
+        if (path === '/api/v4/teams/team-1/members' && method === 'GET') {
+            return jsonResponse([teamMemberResponse])
+        }
+
+        if (path === '/api/v4/teams/team-1/members' && method === 'POST') {
+            return jsonResponse(teamMemberResponse, true, 201)
+        }
+
+        if (path === '/api/v4/teams/team-1/members/user-1' && method === 'DELETE') {
+            return jsonResponse({ status: 'OK' })
+        }
+
         if (path === '/api/v4/teams/team-1/channels') {
             return jsonResponse([publicChannelResponse])
         }
 
         if (path === '/api/v4/teams/team-1/channels/private') {
             return jsonResponse([privateChannelResponse])
+        }
+
+        if (path === '/api/v4/channels/channel-1') {
+            return jsonResponse(publicChannelResponse)
         }
 
         if (path === '/api/v4/channels/channel-1/members' && method === 'GET') {
@@ -174,7 +204,25 @@ describe('connector client unit tests', () => {
         expect(allAccounts[0]).toMatchObject({
             id: 'user-1',
             username: 'ada',
-            channels: ['channel-1', 'channel-2'],
+            teams: ['team:team-1'],
+            channels: ['channel:channel-1', 'channel:channel-2'],
+            roleEntitlements: [
+                'role:system_user',
+                'role:team_admin',
+                'role:team_user',
+                'role:channel_admin',
+                'role:channel_user',
+            ],
+            entitlements: [
+                'team:team-1',
+                'channel:channel-1',
+                'channel:channel-2',
+                'role:system_user',
+                'role:team_admin',
+                'role:team_user',
+                'role:channel_admin',
+                'role:channel_user',
+            ],
         })
     })
 
@@ -209,13 +257,43 @@ describe('connector client unit tests', () => {
 
         expect(entitlements).toHaveLength(2)
         expect(entitlements[0]).toMatchObject({
-            id: 'channel-1',
-            name: 'town-square',
+            id: 'channel:channel-1',
+            name: 'Town Square',
             displayName: 'Town Square',
+            type: 'channel',
             teamId: 'team-1',
             teamName: 'core',
+            channelId: 'channel-1',
+            riskLevel: 'medium',
             memberIds: ['user-1'],
             adminIds: ['user-1'],
+        })
+    })
+
+    it('lists teams, channels, and roles as entitlements', async () => {
+        const client = new MattermostClient(mockConfig)
+
+        const entitlements = await client.getAllEntitlements()
+
+        expect(entitlements.map((entitlement) => entitlement.id)).toEqual(
+            expect.arrayContaining(['team:team-1', 'channel:channel-1', 'role:system_admin', 'role:system_user'])
+        )
+    })
+
+    it('reads a single Mattermost channel entitlement', async () => {
+        const client = new MattermostClient(mockConfig)
+
+        const entitlement = await client.getChannelEntitlement('channel-1')
+
+        expect(entitlement).toMatchObject({
+            id: 'channel:channel-1',
+            name: 'Town Square',
+            displayName: 'Town Square',
+            type: 'channel',
+            teamId: 'team-1',
+            teamName: 'core',
+            channelId: 'channel-1',
+            memberIds: ['user-1'],
         })
     })
 
@@ -324,6 +402,20 @@ describe('connector client unit tests', () => {
             { active: false },
             { active: true },
         ])
+    })
+
+    it('unlocks Mattermost accounts by setting them active', async () => {
+        const client = new MattermostClient(mockConfig)
+
+        await client.unlockAccount('user-1')
+
+        const fetchMock = global.fetch as jest.Mock
+        const unlockCall = fetchMock.mock.calls.find(([url, init]) => {
+            const requestUrl = url instanceof URL ? url : new URL(url.toString())
+            return requestUrl.pathname === '/api/v4/users/user-1/active' && init?.method === 'PUT'
+        })
+
+        expect(JSON.parse(unlockCall?.[1]?.body as string)).toStrictEqual({ active: true })
     })
 
     it('tests the connection', async () => {

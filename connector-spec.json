@@ -8,7 +8,9 @@
         "std:account:delete",
         "std:account:disable",
         "std:account:enable",
+        "std:account:unlock",
         "std:entitlement:list",
+        "std:entitlement:read",
         "std:test-connection"
     ],
     "sourceConfig": [
@@ -106,7 +108,7 @@
     "accountSchema": {
         "displayAttribute": "firstName",
         "identityAttribute": "email",
-        "groupAttribute": "channels",
+        "groupAttribute": "entitlements",
         "attributes": [
             {
                 "name": "id",
@@ -169,6 +171,15 @@
                 "description": "Roles assigned to the account"
             },
             {
+                "name": "roleEntitlements",
+                "type": "string",
+                "description": "Mattermost role entitlements assigned to the account",
+                "multi": true,
+                "entitlement": true,
+                "managed": true,
+                "schemaObjectType": "role"
+            },
+            {
                 "name": "locale",
                 "type": "string",
                 "description": "Locale configured for the account"
@@ -179,6 +190,15 @@
                 "description": "Timezone configured for the account"
             },
             {
+                "name": "teams",
+                "type": "string",
+                "description": "Mattermost team memberships assigned to the account",
+                "multi": true,
+                "entitlement": true,
+                "managed": true,
+                "schemaObjectType": "team"
+            },
+            {
                 "name": "channels",
                 "type": "string",
                 "description": "Mattermost channel memberships assigned to the account",
@@ -186,10 +206,80 @@
                 "entitlement": true,
                 "managed": true,
                 "schemaObjectType": "channel"
+            },
+            {
+                "name": "entitlements",
+                "type": "string",
+                "description": "All normalized Mattermost team, channel, and role entitlements assigned to the account",
+                "multi": true
             }
         ]
     },
     "entitlementSchemas": [
+        {
+            "type": "team",
+            "displayAttribute": "name",
+            "identityAttribute": "id",
+            "attributes": [
+                {
+                    "name": "id",
+                    "type": "string",
+                    "description": "Normalized Mattermost team entitlement ID"
+                },
+                {
+                    "name": "name",
+                    "type": "string",
+                    "description": "Mattermost team display name"
+                },
+                {
+                    "name": "type",
+                    "type": "string",
+                    "description": "Entitlement type"
+                },
+                {
+                    "name": "description",
+                    "type": "string",
+                    "description": "Team entitlement description"
+                },
+                {
+                    "name": "teamId",
+                    "type": "string",
+                    "description": "Mattermost team ID"
+                },
+                {
+                    "name": "teamName",
+                    "type": "string",
+                    "description": "Mattermost team name"
+                },
+                {
+                    "name": "teamDisplayName",
+                    "type": "string",
+                    "description": "Mattermost team display name"
+                },
+                {
+                    "name": "riskLevel",
+                    "type": "string",
+                    "description": "Entitlement risk level"
+                },
+                {
+                    "name": "requestable",
+                    "type": "boolean",
+                    "description": "Indicates whether the entitlement can be requested"
+                },
+                {
+                    "name": "memberIds",
+                    "type": "string",
+                    "description": "Mattermost user IDs that are members of the team",
+                    "multi": true
+                },
+                {
+                    "name": "adminIds",
+                    "type": "string",
+                    "description": "Mattermost user IDs with team admin rights",
+                    "multi": true
+                }
+            ]
+        },
         {
             "type": "channel",
             "displayAttribute": "displayName",
@@ -198,7 +288,7 @@
                 {
                     "name": "id",
                     "type": "string",
-                    "description": "Mattermost channel ID"
+                    "description": "Normalized Mattermost channel entitlement ID"
                 },
                 {
                     "name": "name",
@@ -216,9 +306,29 @@
                     "description": "Mattermost channel type"
                 },
                 {
+                    "name": "description",
+                    "type": "string",
+                    "description": "Channel entitlement description"
+                },
+                {
                     "name": "teamId",
                     "type": "string",
                     "description": "Mattermost team ID that owns the channel"
+                },
+                {
+                    "name": "channelId",
+                    "type": "string",
+                    "description": "Mattermost channel ID"
+                },
+                {
+                    "name": "riskLevel",
+                    "type": "string",
+                    "description": "Entitlement risk level"
+                },
+                {
+                    "name": "requestable",
+                    "type": "boolean",
+                    "description": "Indicates whether the entitlement can be requested"
                 },
                 {
                     "name": "teamName",
@@ -266,6 +376,48 @@
                     "type": "string",
                     "description": "Mattermost user IDs with channel admin rights",
                     "multi": true
+                }
+            ]
+        },
+        {
+            "type": "role",
+            "displayAttribute": "name",
+            "identityAttribute": "id",
+            "attributes": [
+                {
+                    "name": "id",
+                    "type": "string",
+                    "description": "Normalized Mattermost role entitlement ID"
+                },
+                {
+                    "name": "name",
+                    "type": "string",
+                    "description": "Mattermost role display name"
+                },
+                {
+                    "name": "type",
+                    "type": "string",
+                    "description": "Entitlement type"
+                },
+                {
+                    "name": "description",
+                    "type": "string",
+                    "description": "Role entitlement description"
+                },
+                {
+                    "name": "roleName",
+                    "type": "string",
+                    "description": "Mattermost role name"
+                },
+                {
+                    "name": "riskLevel",
+                    "type": "string",
+                    "description": "Entitlement risk level"
+                },
+                {
+                    "name": "requestable",
+                    "type": "boolean",
+                    "description": "Indicates whether the entitlement can be requested"
                 }
             ]
         }

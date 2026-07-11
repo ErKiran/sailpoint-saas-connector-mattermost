@@ -10,6 +10,8 @@ import {
     StdTestConnectionInput,
     StdEntitlementListInput,
     StdEntitlementListOutput,
+    StdEntitlementReadInput,
+    StdEntitlementReadOutput,
     StdAccountCreateInput,
     StdAccountCreateOutput,
     StdAccountUpdateInput,
@@ -22,11 +24,12 @@ import {
     StdAccountDisableOutput,
     StdAccountEnableInput,
     StdAccountEnableOutput,
+    StdAccountUnlockInput,
+    StdAccountUnlockOutput,
 } from '@sailpoint/connector-sdk'
 import { MattermostClient } from './mattermost'
 import { toStdAccountOutput } from './sailpoint/account-output'
-
-const CHANNEL_ENTITLEMENT_TYPE = 'channel'
+import { toStdEntitlementOutput } from './sailpoint/entitlement-output'
 
 // Connector must be exported as module property named connector
 export const connector = async () => {
@@ -79,42 +82,27 @@ export const connector = async () => {
                 res.send(toStdAccountOutput(await mattermost.setAccountActive(input.identity, true)))
             }
         )
+        .stdAccountUnlock(
+            async (context: Context, input: StdAccountUnlockInput, res: Response<StdAccountUnlockOutput>) => {
+                res.send(toStdAccountOutput(await mattermost.unlockAccount(input.identity)))
+            }
+        )
         .stdEntitlementList(
             async (context: Context, input: StdEntitlementListInput, res: Response<StdEntitlementListOutput>) => {
-                const entitlementType = input?.type ?? CHANNEL_ENTITLEMENT_TYPE
-
-                if (entitlementType !== CHANNEL_ENTITLEMENT_TYPE) {
-                    logger.info(`stdEntitlementList skipped unsupported entitlement type ${entitlementType}`)
-                    return
-                }
-
-                const entitlements = await mattermost.getAllChannelEntitlements()
+                const entitlements = (await mattermost.getAllEntitlements()).filter(
+                    (entitlement) => !input?.type || entitlement.type === input.type
+                )
 
                 for (const entitlement of entitlements) {
-                    res.send({
-                        identity: entitlement.name,
-                        uuid: entitlement.id,
-                        type: CHANNEL_ENTITLEMENT_TYPE,
-                        attributes: {
-                            id: entitlement.id,
-                            name: entitlement.name,
-                            displayName: entitlement.displayName,
-                            type: entitlement.type,
-                            teamId: entitlement.teamId,
-                            teamName: entitlement.teamName,
-                            teamDisplayName: entitlement.teamDisplayName,
-                            purpose: entitlement.purpose,
-                            header: entitlement.header,
-                            createdAt: entitlement.createdAt,
-                            updatedAt: entitlement.updatedAt,
-                            deletedAt: entitlement.deletedAt,
-                            memberIds: entitlement.memberIds,
-                            adminIds: entitlement.adminIds,
-                        },
-                    })
+                    res.send(toStdEntitlementOutput(entitlement))
                 }
 
-                logger.info(`stdEntitlementList sent ${entitlements.length} channel entitlements`)
+                logger.info(`stdEntitlementList sent ${entitlements.length} entitlements`)
+            }
+        )
+        .stdEntitlementRead(
+            async (context: Context, input: StdEntitlementReadInput, res: Response<StdEntitlementReadOutput>) => {
+                res.send(toStdEntitlementOutput(await mattermost.getEntitlement(input.type, input.identity)))
             }
         )
 }

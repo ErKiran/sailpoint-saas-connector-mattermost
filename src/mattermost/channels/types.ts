@@ -28,6 +28,26 @@ export interface MattermostTeam {
     allowOpenInvite: boolean
 }
 
+export interface MattermostTeamMemberResponse {
+    team_id: string
+    user_id: string
+    roles: string
+    delete_at: number
+    scheme_guest: boolean
+    scheme_user: boolean
+    scheme_admin: boolean
+}
+
+export interface MattermostTeamMember {
+    teamId: string
+    userId: string
+    roles: string
+    deleteAt: number
+    schemeGuest: boolean
+    schemeUser: boolean
+    schemeAdmin: boolean
+}
+
 export interface MattermostChannelResponse {
     id: string
     create_at: number
@@ -88,19 +108,36 @@ export interface MattermostChannelMember {
     schemeAdmin: boolean
 }
 
-export interface MattermostChannelEntitlement {
+export type MattermostEntitlementType = 'team' | 'channel' | 'role'
+
+export interface MattermostEntitlement {
     id: string
     name: string
-    displayName: string
-    type: string
-    teamId: string
-    teamName: string
-    teamDisplayName: string
-    purpose: string
-    header: string
-    createdAt: number
-    updatedAt: number
-    deletedAt: number
-    memberIds: string[]
-    adminIds: string[]
+    type: MattermostEntitlementType
+    description: string
+    displayName?: string
+    teamId?: string
+    teamName?: string
+    teamDisplayName?: string
+    channelId?: string
+    roleName?: string
+    riskLevel?: string
+    requestable?: boolean
+    purpose?: string
+    header?: string
+    createdAt?: number
+    updatedAt?: number
+    deletedAt?: number
+    memberIds?: string[]
+    adminIds?: string[]
+}
+
+export type MattermostChannelEntitlement = MattermostEntitlement
+
+export interface MattermostRoleDefinition {
+    roleName: string
+    name: string
+    description: string
+    riskLevel: string
+    requestable: boolean
 }
