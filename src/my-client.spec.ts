@@ -92,7 +92,9 @@ const channelMemberResponse = {
     scheme_admin: true,
 }
 
-function mockFetchWithMattermostResponses() {
+function mockFetchWithMattermostResponses(options: { teamMembers?: (typeof teamMemberResponse)[] } = {}) {
+    const teamMembers = options.teamMembers ?? [teamMemberResponse]
+
     global.fetch = jest.fn(async (url: URL | RequestInfo, init?: RequestInit) => {
         const requestUrl = url instanceof URL ? url : new URL(url.toString())
         const path = requestUrl.pathname
@@ -139,7 +141,7 @@ function mockFetchWithMattermostResponses() {
         }
 
         if (path === '/api/v4/teams/team-1/members' && method === 'GET') {
-            return jsonResponse([teamMemberResponse])
+            return jsonResponse(teamMembers)
         }
 
         if (path === '/api/v4/teams/team-1/members' && method === 'POST') {
@@ -297,7 +299,8 @@ describe('connector client unit tests', () => {
         })
     })
 
-    it('creates a Mattermost account and assigns requested channels', async () => {
+    it('creates a Mattermost account and assigns requested teams before channels', async () => {
+        mockFetchWithMattermostResponses({ teamMembers: [] })
         const client = new MattermostClient(mockConfig)
 
         await client.createAccount({
@@ -307,7 +310,8 @@ describe('connector client unit tests', () => {
                 firstName: 'Ada',
                 lastName: 'Lovelace',
                 password: 'temporary-password',
-                channels: ['channel-1'],
+                teams: ['Core Team'],
+                channels: ['channel:channel-1'],
             },
         })
 
@@ -320,6 +324,18 @@ describe('connector client unit tests', () => {
             const requestUrl = url instanceof URL ? url : new URL(url.toString())
             return requestUrl.pathname === '/api/v4/channels/channel-1/members' && init?.method === 'POST'
         })
+        const addTeamCalls = fetchMock.mock.calls.filter(([url, init]) => {
+            const requestUrl = url instanceof URL ? url : new URL(url.toString())
+            return requestUrl.pathname === '/api/v4/teams/team-1/members' && init?.method === 'POST'
+        })
+        const firstAddTeamIndex = fetchMock.mock.calls.findIndex(([url, init]) => {
+            const requestUrl = url instanceof URL ? url : new URL(url.toString())
+            return requestUrl.pathname === '/api/v4/teams/team-1/members' && init?.method === 'POST'
+        })
+        const addChannelIndex = fetchMock.mock.calls.findIndex(([url, init]) => {
+            const requestUrl = url instanceof URL ? url : new URL(url.toString())
+            return requestUrl.pathname === '/api/v4/channels/channel-1/members' && init?.method === 'POST'
+        })
 
         expect(JSON.parse(createCall?.[1]?.body as string)).toMatchObject({
             email: 'ada@example.com',
@@ -328,7 +344,13 @@ describe('connector client unit tests', () => {
             last_name: 'Lovelace',
             password: 'temporary-password',
         })
+        expect(addTeamCalls.length).toBeGreaterThanOrEqual(1)
+        expect(JSON.parse(addTeamCalls[0]?.[1]?.body as string)).toStrictEqual({
+            team_id: 'team-1',
+            user_id: 'user-1',
+        })
         expect(JSON.parse(addChannelCall?.[1]?.body as string)).toStrictEqual({ user_id: 'user-1' })
+        expect(firstAddTeamIndex).toBeLessThan(addChannelIndex)
     })
 
     it('updates account attributes, roles, and channel memberships', async () => {

@@ -1,3 +1,4 @@
+import { ConnectorError } from '@sailpoint/connector-sdk'
 import { MattermostHttpClient } from '../common/http-client'
 import {
     ROLE_DEFINITIONS,
@@ -112,7 +113,7 @@ export class MattermostChannelService {
     }
 
     async addUserToTeam(userId: string, teamId: string): Promise<void> {
-        const rawTeamId = stripEntitlementPrefix(teamId, 'team')
+        const rawTeamId = await this.resolveTeamId(teamId)
         await this.http.request(`/api/v4/teams/${rawTeamId}/members`, {}, 'POST', {
             team_id: rawTeamId,
             user_id: userId,
@@ -120,15 +121,11 @@ export class MattermostChannelService {
     }
 
     async removeUserFromTeam(userId: string, teamId: string): Promise<void> {
-        await this.http.request(
-            `/api/v4/teams/${stripEntitlementPrefix(teamId, 'team')}/members/${userId}`,
-            {},
-            'DELETE'
-        )
+        await this.http.request(`/api/v4/teams/${await this.resolveTeamId(teamId)}/members/${userId}`, {}, 'DELETE')
     }
 
     async setUserTeams(userId: string, teamIds: string[]): Promise<void> {
-        const desiredTeamIds = new Set(teamIds.map((teamId) => stripEntitlementPrefix(teamId, 'team')))
+        const desiredTeamIds = new Set(await Promise.all(teamIds.map((teamId) => this.resolveTeamId(teamId))))
         const currentTeamIds = new Set(
             (await this.getTeamIdsForUser(userId)).map((teamId) => stripEntitlementPrefix(teamId, 'team'))
         )
@@ -147,14 +144,13 @@ export class MattermostChannelService {
     }
 
     async addUserToChannel(userId: string, channelId: string): Promise<void> {
-        await this.http.request(
-            `/api/v4/channels/${stripEntitlementPrefix(channelId, 'channel')}/members`,
-            {},
-            'POST',
-            {
-                user_id: userId,
-            }
-        )
+        const rawChannelId = stripEntitlementPrefix(channelId, 'channel')
+        const channel = mapMattermostChannelResponse(await this.http.request(`/api/v4/channels/${rawChannelId}`))
+
+        await this.ensureUserInTeam(userId, channel.teamId)
+        await this.http.request(`/api/v4/channels/${rawChannelId}/members`, {}, 'POST', {
+            user_id: userId,
+        })
     }
 
     async removeUserFromChannel(userId: string, channelId: string): Promise<void> {
@@ -254,6 +250,31 @@ export class MattermostChannelService {
             mapMattermostChannelMemberResponse
         )
     }
+
+    private async ensureUserInTeam(userId: string, teamId: string): Promise<void> {
+        const members = await this.getAllTeamMembers(teamId)
+        if (!members.some((member) => member.userId === userId)) {
+            await this.addUserToTeam(userId, teamId)
+        }
+    }
+
+    private async resolveTeamId(teamIdOrName: string): Promise<string> {
+        const rawTeamIdOrName = stripEntitlementPrefix(teamIdOrName, 'team')
+        const lookupValue = normalizeIdentifier(rawTeamIdOrName)
+        const teams = await this.getAllTeams()
+        const team = teams.find(
+            (candidate) =>
+                normalizeIdentifier(candidate.id) === lookupValue ||
+                normalizeIdentifier(candidate.name) === lookupValue ||
+                normalizeIdentifier(candidate.displayName) === lookupValue
+        )
+
+        if (!team) {
+            throw new ConnectorError(`Mattermost team "${teamIdOrName}" was not found`)
+        }
+
+        return team.id
+    }
 }
 
 function toDisplayName(value: string): string {
@@ -261,4 +282,8 @@ function toDisplayName(value: string): string {
         .split('_')
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ')
+}
+
+function normalizeIdentifier(value: string): string {
+    return value.trim().toLowerCase()
 }

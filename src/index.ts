@@ -30,6 +30,8 @@ import {
 import { MattermostClient } from './mattermost'
 import { toStdAccountOutput } from './sailpoint/account-output'
 import { toStdEntitlementOutput } from './sailpoint/entitlement-output'
+import { toMattermostCreateAccountInput } from './mattermost/users/payloads'
+import { logMattermostCreateInput, logStdAccountCreateInput } from './sailpoint/request-logging'
 
 // Connector must be exported as module property named connector
 export const connector = async () => {
@@ -59,7 +61,10 @@ export const connector = async () => {
         })
         .stdAccountCreate(
             async (context: Context, input: StdAccountCreateInput, res: Response<StdAccountCreateOutput>) => {
-                res.send(toStdAccountOutput(await mattermost.createAccount(input)))
+                logStdAccountCreateInput(input)
+                const createInput = toMattermostCreateAccountInput(input)
+                logMattermostCreateInput(createInput)
+                res.send(toStdAccountOutput(await mattermost.createAccount(createInput)))
             }
         )
         .stdAccountUpdate(

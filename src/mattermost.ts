@@ -1,11 +1,11 @@
-import { StdAccountCreateInput, StdAccountUpdateInput } from '@sailpoint/connector-sdk'
+import { StdAccountUpdateInput } from '@sailpoint/connector-sdk'
 import { MattermostChannelService } from './mattermost/channels/service'
 import { MattermostChannelEntitlement, MattermostEntitlement } from './mattermost/channels/types'
 import { MattermostHttpClient } from './mattermost/common/http-client'
 import { MattermostConfig } from './mattermost/common/types'
 import { buildUserFilter } from './mattermost/users/filters'
 import { MattermostUserService } from './mattermost/users/service'
-import { MattermostUser } from './mattermost/users/types'
+import { MattermostCreateAccountInput, MattermostUser } from './mattermost/users/types'
 
 const PING_PATH = '/api/v4/system/ping'
 
@@ -33,7 +33,7 @@ export class MattermostClient {
         return this.users.getAccount(userId)
     }
 
-    async createAccount(input: StdAccountCreateInput): Promise<MattermostUser> {
+    async createAccount(input: MattermostCreateAccountInput): Promise<MattermostUser> {
         return this.users.createAccount(input)
     }
 

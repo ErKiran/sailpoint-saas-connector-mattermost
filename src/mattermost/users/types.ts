@@ -32,6 +32,11 @@ export interface MattermostAccountAttributes {
     entitlements?: string[]
 }
 
+export interface MattermostCreateAccountInput {
+    identity?: string
+    attributes: MattermostAccountAttributes
+}
+
 export interface MattermostCreateUserRequest {
     email: string
     username: string

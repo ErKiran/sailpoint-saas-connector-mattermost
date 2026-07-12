@@ -1,4 +1,4 @@
-import { AttributeChangeOp, StdAccountCreateInput, StdAccountUpdateInput } from '@sailpoint/connector-sdk'
+import { AttributeChangeOp, StdAccountUpdateInput } from '@sailpoint/connector-sdk'
 import { toStringArray } from '../common/helpers'
 import { MattermostHttpClient } from '../common/http-client'
 import { QueryParams } from '../common/types'
@@ -6,7 +6,8 @@ import { MattermostChannelService } from '../channels/service'
 import { stripEntitlementPrefix, toRoleEntitlementId } from '../channels/mappers'
 import { mapMattermostUserResponse } from './mappers'
 import { applyPatchChange, toCreateUserRequest } from './payloads'
-import { MattermostAccountAttributes, MattermostPatchUserRequest, MattermostUser } from './types'
+import { MattermostCreateAccountInput, MattermostPatchUserRequest, MattermostUser } from './types'
+import { logMattermostCreatePayload } from '../../sailpoint/request-logging'
 
 const LIST_USERS = '/api/v4/users'
 
@@ -82,24 +83,23 @@ export class MattermostUserService {
         }
     }
 
-    async createAccount(input: StdAccountCreateInput): Promise<MattermostUser> {
-        const attributes = input.attributes as MattermostAccountAttributes
-        const user = mapMattermostUserResponse(
-            await this.http.request(LIST_USERS, {}, 'POST', toCreateUserRequest(attributes))
-        )
+    async createAccount(input: MattermostCreateAccountInput): Promise<MattermostUser> {
+        const createPayload = toCreateUserRequest(input)
+        logMattermostCreatePayload(createPayload)
+        const user = mapMattermostUserResponse(await this.http.request(LIST_USERS, {}, 'POST', createPayload))
 
-        for (const channelId of attributes.channels ?? []) {
-            await this.channels.addUserToChannel(user.id, channelId)
-        }
-
-        for (const teamId of attributes.teams ?? []) {
+        for (const teamId of input.attributes.teams ?? []) {
             await this.channels.addUserToTeam(user.id, teamId)
         }
 
-        await this.applyUnifiedEntitlementAdds(user.id, attributes.entitlements ?? [])
+        for (const channelId of input.attributes.channels ?? []) {
+            await this.channels.addUserToChannel(user.id, channelId)
+        }
 
-        if (attributes.roles) {
-            await this.updateUserRoles(user.id, toSystemRoles(attributes.roles))
+        await this.applyUnifiedEntitlementAdds(user.id, input.attributes.entitlements ?? [])
+
+        if (input.attributes.roles) {
+            await this.updateUserRoles(user.id, toSystemRoles(input.attributes.roles))
         }
 
         return this.getAccountWithChannels(user.id)
