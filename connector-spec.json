@@ -108,7 +108,7 @@
     "accountSchema": {
         "displayAttribute": "firstName",
         "identityAttribute": "email",
-        "groupAttribute": "entitlements",
+        "groupAttribute": "teams",
         "attributes": [
             {
                 "name": "id",
@@ -206,19 +206,13 @@
                 "entitlement": true,
                 "managed": true,
                 "schemaObjectType": "channel"
-            },
-            {
-                "name": "entitlements",
-                "type": "string",
-                "description": "All normalized Mattermost team, channel, and role entitlements assigned to the account",
-                "multi": true
             }
         ]
     },
     "entitlementSchemas": [
         {
             "type": "team",
-            "displayAttribute": "name",
+            "displayAttribute": "displayName",
             "identityAttribute": "id",
             "attributes": [
                 {
@@ -228,6 +222,11 @@
                 },
                 {
                     "name": "name",
+                    "type": "string",
+                    "description": "Mattermost team display name"
+                },
+                {
+                    "name": "displayName",
                     "type": "string",
                     "description": "Mattermost team display name"
                 },
@@ -265,18 +264,6 @@
                     "name": "requestable",
                     "type": "boolean",
                     "description": "Indicates whether the entitlement can be requested"
-                },
-                {
-                    "name": "memberIds",
-                    "type": "string",
-                    "description": "Mattermost user IDs that are members of the team",
-                    "multi": true
-                },
-                {
-                    "name": "adminIds",
-                    "type": "string",
-                    "description": "Mattermost user IDs with team admin rights",
-                    "multi": true
                 }
             ]
         },
@@ -364,24 +351,12 @@
                     "name": "deletedAt",
                     "type": "string",
                     "description": "Channel deletion timestamp, if deleted"
-                },
-                {
-                    "name": "memberIds",
-                    "type": "string",
-                    "description": "Mattermost user IDs that are members of the channel",
-                    "multi": true
-                },
-                {
-                    "name": "adminIds",
-                    "type": "string",
-                    "description": "Mattermost user IDs with channel admin rights",
-                    "multi": true
                 }
             ]
         },
         {
             "type": "role",
-            "displayAttribute": "name",
+            "displayAttribute": "displayName",
             "identityAttribute": "id",
             "attributes": [
                 {
@@ -391,6 +366,11 @@
                 },
                 {
                     "name": "name",
+                    "type": "string",
+                    "description": "Mattermost role display name"
+                },
+                {
+                    "name": "displayName",
                     "type": "string",
                     "description": "Mattermost role display name"
                 },

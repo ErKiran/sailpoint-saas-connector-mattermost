@@ -250,13 +250,13 @@ describe('connector unit tests', () => {
         expect(chunks).toStrictEqual([
             new RawResponse(
                 {
-                    identity: 'Town Square',
+                    identity: 'channel:channel-1',
                     uuid: 'channel:channel-1',
                     type: 'channel',
                     attributes: {
                         id: 'channel:channel-1',
                         name: 'Town Square',
-                        displayName: 'Town Square',
+                        displayName: 'Core Team / Town Square',
                         type: 'channel',
                         description: 'Access to the Town Square channel',
                         teamId: 'team-1',
@@ -271,8 +271,6 @@ describe('connector unit tests', () => {
                         createdAt: 10,
                         updatedAt: 20,
                         deletedAt: 0,
-                        memberIds: ['user-1'],
-                        adminIds: [],
                     },
                 },
                 ResponseType.Output
@@ -309,13 +307,13 @@ describe('connector unit tests', () => {
         expect(chunks).toStrictEqual([
             new RawResponse(
                 {
-                    identity: 'Town Square',
+                    identity: 'channel:channel-1',
                     uuid: 'channel:channel-1',
                     type: 'channel',
                     attributes: {
                         id: 'channel:channel-1',
                         name: 'Town Square',
-                        displayName: 'Town Square',
+                        displayName: 'Core Team / Town Square',
                         type: 'channel',
                         description: 'Access to the Town Square channel',
                         teamId: 'team-1',
@@ -330,8 +328,6 @@ describe('connector unit tests', () => {
                         createdAt: 10,
                         updatedAt: 20,
                         deletedAt: 0,
-                        memberIds: ['user-1'],
-                        adminIds: [],
                     },
                 },
                 ResponseType.Output
@@ -389,7 +385,6 @@ describe('connector unit tests', () => {
                         roleEntitlements: ['role:system_user'],
                         teams: [],
                         channels: [],
-                        entitlements: ['role:system_user'],
                     },
                 },
                 ResponseType.Output

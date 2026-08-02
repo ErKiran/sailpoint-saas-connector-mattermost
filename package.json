@@ -6,7 +6,7 @@
     "clean": "shx rm -rf ./dist",
     "prebuild": "npm run clean",
     "build": "npx ncc build ./src/index.ts -o ./dist -m -C",
-    "dev": "cross-env NODE_OPTIONS=--enable-source-maps spcx run dist/index.js",
+    "dev": "cross-env NODE_OPTIONS=--enable-source-maps spcx run dist/index.js 3001",
     "debug": "spcx run dist/index.js",
     "prettier": "npx prettier --write .",
     "test": "jest --coverage",

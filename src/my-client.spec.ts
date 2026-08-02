@@ -215,17 +215,23 @@ describe('connector client unit tests', () => {
                 'role:channel_admin',
                 'role:channel_user',
             ],
-            entitlements: [
-                'team:team-1',
-                'channel:channel-1',
-                'channel:channel-2',
-                'role:system_user',
-                'role:team_admin',
-                'role:team_user',
-                'role:channel_admin',
-                'role:channel_user',
-            ],
         })
+        expect(allAccounts[0]).not.toHaveProperty('entitlements')
+    })
+
+    it('returns account entitlement values that exactly match aggregated entitlement ids', async () => {
+        const client = new MattermostClient(mockConfig)
+
+        const [account] = await client.getAllAccounts()
+        const entitlementIds = new Set((await client.getAllEntitlements()).map((entitlement) => entitlement.id))
+
+        for (const entitlementId of [
+            ...(account.teams ?? []),
+            ...(account.channels ?? []),
+            ...(account.roleEntitlements ?? []),
+        ]) {
+            expect(entitlementIds.has(entitlementId)).toBe(true)
+        }
     })
 
     it('passes configured user filters to the Mattermost users endpoint', async () => {
@@ -261,7 +267,7 @@ describe('connector client unit tests', () => {
         expect(entitlements[0]).toMatchObject({
             id: 'channel:channel-1',
             name: 'Town Square',
-            displayName: 'Town Square',
+            displayName: 'Core Team / Town Square',
             type: 'channel',
             teamId: 'team-1',
             teamName: 'core',
@@ -290,7 +296,7 @@ describe('connector client unit tests', () => {
         expect(entitlement).toMatchObject({
             id: 'channel:channel-1',
             name: 'Town Square',
-            displayName: 'Town Square',
+            displayName: 'Core Team / Town Square',
             type: 'channel',
             teamId: 'team-1',
             teamName: 'core',

@@ -24,7 +24,6 @@ export function toStdAccountOutput(account: MattermostUser): StdAccountListOutpu
             timeZone: account.timezone?.automaticTimezone || null,
             teams: account.teams ?? [],
             channels: account.channels ?? [],
-            entitlements: account.entitlements ?? [],
         },
     }
 }

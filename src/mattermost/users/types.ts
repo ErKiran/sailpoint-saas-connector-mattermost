@@ -115,7 +115,6 @@ export interface MattermostUser {
     teams?: string[]
     channels?: string[]
     roleEntitlements?: string[]
-    entitlements?: string[]
 }
 
 export interface MattermostNotifyPropsResponse {

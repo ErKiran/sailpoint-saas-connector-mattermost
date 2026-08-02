@@ -283,7 +283,7 @@ function buildAccessAttributes(
     channels: string[],
     teamRoles: Set<string> = new Set(),
     channelRoles: Set<string> = new Set()
-): Pick<MattermostUser, 'teams' | 'channels' | 'roleEntitlements' | 'entitlements'> {
+): Pick<MattermostUser, 'teams' | 'channels' | 'roleEntitlements'> {
     const roleEntitlements = toRoleEntitlements([
         ...toStringArray(user.roles),
         ...Array.from(teamRoles),
@@ -294,7 +294,6 @@ function buildAccessAttributes(
         teams,
         channels,
         roleEntitlements,
-        entitlements: [...teams, ...channels, ...roleEntitlements],
     }
 }
 

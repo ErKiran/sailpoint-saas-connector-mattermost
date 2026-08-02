@@ -5,7 +5,7 @@ export function toStdEntitlementOutput(
     entitlement: MattermostEntitlement
 ): StdEntitlementListOutput | StdEntitlementReadOutput {
     return {
-        identity: entitlement.name,
+        identity: entitlement.id,
         uuid: entitlement.id,
         type: entitlement.type,
         attributes: {
@@ -26,8 +26,6 @@ export function toStdEntitlementOutput(
             createdAt: entitlement.createdAt ?? null,
             updatedAt: entitlement.updatedAt ?? null,
             deletedAt: entitlement.deletedAt ?? null,
-            memberIds: entitlement.memberIds ?? [],
-            adminIds: entitlement.adminIds ?? [],
         },
     }
 }

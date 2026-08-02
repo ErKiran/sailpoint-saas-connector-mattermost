@@ -1,100 +1,383 @@
-# Mattermost SaaS Connector - TypeScript/Jest Configuration Notes
+# Mattermost SailPoint SaaS Connector
 
-This project is based on the default SailPoint Connector SDK generated project.  
-After generating the base connector, a few changes were required to make the local TypeScript build and Jest test setup work correctly.
+This is a SailPoint SaaS connector for Mattermost.
 
-## Why These Changes Were Needed
+The connector can aggregate Mattermost users, teams, channels, and roles. It also supports provisioning users from SailPoint to Mattermost, including assigning team and channel access.
 
-The base SailPoint generated connector project gives a good starting point, but the default TypeScript and Jest configuration may not fully align with the current local Node.js, TypeScript, Jest, and `ts-jest` versions.
+I built this connector to make Mattermost access governable from SailPoint, same like other connectors where we can see accounts, filter users, review entitlements, and provision or revoke access.
 
-During setup, the project had the following issues:
+## What This Connector Does
 
-- `ts-jest` preset resolution errors
-- Missing Node.js type definitions
-- Missing Jest globals such as `describe`, `it`, and `expect`
-- TypeScript module resolution warnings
-- SailPoint SDK `Context` type mismatch in unit tests
-- Compatibility issues between `typescript`, `jest`, and `ts-jest`
+-   Connects to Mattermost using a bearer token and Mattermost base URL.
+-   Tests connection with Mattermost system ping API.
+-   Aggregates Mattermost users as SailPoint accounts.
+-   Supports filtering users during account aggregation.
+-   Aggregates Mattermost teams as entitlements.
+-   Aggregates Mattermost channels as entitlements.
+-   Aggregates Mattermost roles as entitlements.
+-   Keeps separate entitlement-backed fields for `teams`, `channels`, and `roleEntitlements`.
+-   Uses stable entitlement IDs as entitlement identity values, not friendly names.
+-   Supports account create, update, delete, disable, enable, and unlock.
+-   Supports adding and removing team/channel entitlements.
+-   Supports setting system roles like `system_user` and `system_admin`.
+-   Adds request logs for account create so we can see what SailPoint is passing.
 
-The following updates were made to stabilize the development and test environment.
+## SailPoint Commands
 
----
+These are the standard commands currently supported by the connector:
 
-## 1. Installed Required Development Dependencies
-
-The project requires TypeScript, Jest, ts-jest, and the proper type definitions.
-
-```bash
-npm install --save-dev typescript jest@29 ts-jest@29 @types/jest @types/node
+```text
+std:test-connection
+std:account:list
+std:account:read
+std:account:create
+std:account:update
+std:account:delete
+std:account:disable
+std:account:enable
+std:account:unlock
+std:entitlement:list
+std:entitlement:read
 ```
 
-![Test Result](docs/test.png)
+## Configuration
 
+The connector needs these values in source config:
 
-## Project Status
+| Field     | Description                                                   |
+| --------- | ------------------------------------------------------------- |
+| `token`   | Mattermost personal access token or bot token                 |
+| `baseUrl` | Mattermost base URL, example `https://mattermost.example.com` |
 
-This connector is currently in the early development stage.
+The token should have enough permission to read users, teams, channels, members, and to provision users.
 
-Completed so far:
+## User Filters
 
-- Generated the base SailPoint connector project
-- Fixed local npm dependency/cache issues
-- Stabilized TypeScript configuration
-- Configured Jest with `ts-jest`
-- Added Node and Jest type definitions
-- Fixed the SailPoint SDK `Context` mock used in unit tests
-- Confirmed client unit tests are running successfully with coverage
+The connector supports Mattermost user filters, so we do not need to always aggregate every user.
 
-Current focus:
+Available filter fields:
 
-- Build the Mattermost API client
-- Validate connection to Mattermost
-- Implement account aggregation
-- Map Mattermost users to SailPoint account schema
-- Add unit tests for connector operations
+| Config Key         | Meaning                             |
+| ------------------ | ----------------------------------- |
+| `userActive`       | Aggregate active users only         |
+| `userInactive`     | Aggregate inactive users only       |
+| `userInTeam`       | Aggregate users in a team ID        |
+| `userNotInTeam`    | Aggregate users not in a team ID    |
+| `userInChannel`    | Aggregate users in a channel ID     |
+| `userNotInChannel` | Aggregate users not in a channel ID |
+| `userWithoutTeam`  | Aggregate users without any team    |
+| `userRole`         | Filter by one system role           |
+| `userRoles`        | Filter by multiple system roles     |
+| `userTeamRoles`    | Filter by team roles                |
+| `userChannelRoles` | Filter by channel roles             |
+| `userSort`         | Sort users from Mattermost API      |
 
+Note: `userActive` and `userInactive` cannot both be enabled together.
 
-## Development Roadmap
+## Account Schema
 
-### Step 1: Test Connection
+The account schema includes normal Mattermost user fields and entitlement fields.
 
-Implement a simple connection test against the Mattermost API.
+Main account fields:
 
-The connector should verify:
+```text
+id
+firstName
+lastName
+email
+createdAt
+updatedAt
+userName
+position
+nickname
+emailVerified
+authService
+roles
+locale
+timeZone
+teams
+channels
+roleEntitlements
+```
 
-- The Mattermost base URL is reachable
-- The API token is valid
-- The authenticated user has permission to call the API
+The connector uses:
 
-### Step 2: Account Aggregation
+```text
+identityAttribute: email
+displayAttribute: firstName
+groupAttribute: teams
+```
 
-Fetch users from Mattermost and return them as SailPoint accounts.
+## Entitlements
 
-Expected account fields:
+The connector has three entitlement types.
 
-- `id`
-- `username`
-- `email`
-- `firstName`
-- `lastName`
-- `active`
-- `roles`
+### Team Entitlements
 
-### Step 3: Get Account
+Mattermost team membership.
 
-Implement lookup for a single Mattermost user by account ID.
+Example:
 
-### Step 4: Entitlements
+```text
+team:team_id
+```
 
-Model Mattermost teams, channels, or roles as entitlements depending on the connector design.
+Returned metadata:
 
-Possible entitlement types:
+```text
+id
+name
+type
+description
+teamId
+teamName
+displayName
+teamDisplayName
+riskLevel
+requestable
+```
 
-- Mattermost teams
-- Mattermost channels
-- Mattermost system roles
-- Mattermost team roles
+### Channel Entitlements
 
-### Step 5: Provisioning
+Mattermost channel membership.
 
-Add create, update, disable, and group/channel assignment operations after aggregation is stable.
+Example:
+
+```text
+channel:channel_id
+```
+
+Returned metadata:
+
+```text
+id
+name
+displayName
+type
+description
+teamId
+teamName
+teamDisplayName
+channelId
+riskLevel
+requestable
+purpose
+header
+createdAt
+updatedAt
+deletedAt
+```
+
+Private channels are marked higher risk than normal channels.
+
+### Role Entitlements
+
+Mattermost role or privilege level.
+
+Examples:
+
+```text
+role:system_admin
+role:system_user
+role:team_admin
+role:team_user
+role:channel_admin
+role:channel_user
+role:guest
+```
+
+Admin roles are marked high or critical risk where possible.
+
+## Provisioning Features
+
+The connector supports create and update from SailPoint.
+
+### Create Account
+
+Create account supports these fields:
+
+```text
+email
+userName
+username
+firstName
+lastName
+nickname
+position
+locale
+password
+authData
+authService
+roles
+teams
+channels
+entitlements
+```
+
+`email` can also be inferred from SailPoint identity when it is not directly provided.
+
+`userName` is used as Mattermost username. `username` is also accepted.
+
+During create:
+
+1. Connector creates the Mattermost user.
+2. Connector adds team memberships first.
+3. Connector adds channel memberships after team membership.
+4. Connector applies unified create entitlements if provided in the create request.
+5. Connector updates system roles if provided.
+
+This is important because Mattermost does not allow adding user to a channel if the user is not already member of that channel team.
+
+The connector can resolve team values by:
+
+```text
+team:<id>
+raw team id
+Mattermost team name
+Mattermost team display name
+```
+
+So values like `Engineering` can work if that is the Mattermost team display name.
+
+### Update Account
+
+Update account supports:
+
+-   Patch user profile fields.
+-   Set system roles.
+-   Add, remove, or set `teams`.
+-   Add, remove, or set `channels`.
+-   Add, remove, or set provisioning-only unified `entitlements` input.
+
+### Disable, Enable, Unlock
+
+These commands use Mattermost active status.
+
+```text
+std:account:disable -> active false
+std:account:enable  -> active true
+std:account:unlock  -> active true
+```
+
+### Delete Account
+
+Delete account calls the Mattermost user delete API.
+
+## Request Logs
+
+For account create, the connector logs useful debugging data:
+
+-   Raw SailPoint account create input.
+-   Normalized Mattermost create input.
+-   Mattermost create user payload.
+
+Sensitive values are redacted:
+
+```text
+password
+authData
+auth_data
+token
+secret
+```
+
+This helps to recreate SailPoint create payload locally when provisioning is failing.
+
+## Local Development Commands
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run tests:
+
+```bash
+npm test
+```
+
+Run tests in one process:
+
+```bash
+npm test -- --runInBand
+```
+
+Type check:
+
+```bash
+npx tsc --noEmit
+```
+
+Format all files:
+
+```bash
+npm run prettier
+```
+
+Build connector:
+
+```bash
+npm run build
+```
+
+Run connector locally with source maps:
+
+```bash
+npm run dev
+```
+
+Run connector with SPCX:
+
+```bash
+npm run debug
+```
+
+Package connector zip:
+
+```bash
+npm run pack-zip
+```
+
+Clean build output:
+
+```bash
+npm run clean
+```
+
+## Project Structure
+
+The code is separated by feature area now, so the connector is not one big file.
+
+```text
+src/index.ts                         Connector command registration
+src/mattermost.ts                    Main Mattermost client facade
+src/mattermost/common                Shared HTTP client, helpers, and types
+src/mattermost/users                 User/account code, payloads, filters, mappers
+src/mattermost/channels              Team, channel, role entitlement code
+src/sailpoint                        SailPoint output mapping, schema, request logging
+src/my-client.spec.ts                Mattermost client tests
+src/index.spec.ts                    Connector command tests
+```
+
+## Build And Upload Notes
+
+Before uploading to SailPoint, run:
+
+```bash
+npx tsc --noEmit
+npm test -- --runInBand
+npm run build
+```
+
+Then package:
+
+```bash
+npm run pack-zip
+```
+
+Important note: `accountCreateTemplate` is not used in `connector-spec.json` because SailPoint connector specification validation rejected that property for this connector spec. Account fields are handled by the account schema and create input normalization.
+
+## Current Limitation
+
+`std:account:discover-schema` is not currently registered as a command in this codebase. The account schema is defined in `connector-spec.json` and mirrored in `src/sailpoint/account-schema.ts`.

@@ -132,16 +132,19 @@ export function toChannelEntitlement(
     team: MattermostTeam,
     members: MattermostChannelMember[]
 ): MattermostChannelEntitlement {
+    const channelDisplayName = channel.displayName || channel.name
+    const teamDisplayName = team.displayName || team.name
+
     return {
         id: toChannelEntitlementId(channel.id),
-        name: channel.displayName || channel.name,
-        displayName: channel.displayName || channel.name,
+        name: channelDisplayName,
+        displayName: teamDisplayName ? `${teamDisplayName} / ${channelDisplayName}` : channelDisplayName,
         type: 'channel',
-        description: channel.purpose || `Access to the ${channel.displayName || channel.name} channel`,
+        description: channel.purpose || `Access to the ${channelDisplayName} channel`,
         channelId: channel.id,
         teamId: team.id,
         teamName: team.name,
-        teamDisplayName: team.displayName || team.name,
+        teamDisplayName,
         riskLevel: channel.type === 'P' ? 'high' : 'medium',
         requestable: true,
         purpose: channel.purpose,

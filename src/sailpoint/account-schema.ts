@@ -3,7 +3,7 @@ import { AccountSchema } from '@sailpoint/connector-sdk'
 export const mattermostAccountSchema: AccountSchema = {
     displayAttribute: 'firstName',
     identityAttribute: 'email',
-    groupAttribute: 'entitlements',
+    groupAttribute: 'teams',
     attributes: [
         {
             name: 'id',
@@ -103,12 +103,6 @@ export const mattermostAccountSchema: AccountSchema = {
             entitlement: true,
             managed: true,
             schemaObjectType: 'channel',
-        },
-        {
-            name: 'entitlements',
-            type: 'string',
-            description: 'All normalized Mattermost team, channel, and role entitlements assigned to the account',
-            multi: true,
         },
         {
             name: 'password',
